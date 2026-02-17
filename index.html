@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Treasure Map - The Rusty Quest</title>
+    <style>
+        /* --- Authentic Funky Map Styles --- */
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Homemade+Apple&family=Crimson+Text:ital,wght@0,600;1,400&display=swap');
+
+        :root {
+            --ink-color: #2b1d12;
+            --paper-base: #dcc08e;
+            --accent-red: #7a0b0b;
+            --gold: #b8860b;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: #110c08;
+            background-image: 
+                radial-gradient(circle at center, rgba(0,0,0,0) 0%, rgba(0,0,0,0.9) 100%),
+                url("https://www.transparenttextures.com/patterns/dark-wood.png");
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: var(--ink-color);
+            overflow: hidden;
+            perspective: 1200px;
+        }
+
+        /* --- LOGIN & REGISTER VIEW --- */
+        .login-container {
+            width: 100%;
+            max-width: 400px;
+            background: #fdf5e6 url("https://www.transparenttextures.com/patterns/natural-paper.png");
+            padding: 50px 40px;
+            border: 2px solid var(--ink-color);
+            box-shadow: 0 20px 50px rgba(0,0,0,1);
+            position: relative;
+            transform: rotate(1deg);
+            z-index: 100;
+        }
+
+        .login-container::before, .login-container::after {
+            content: "";
+            position: absolute;
+            left: -15px; right: -15px;
+            height: 30px;
+            background: linear-gradient(to right, #4b2c15, var(--gold), #4b2c15);
+            border: 2px solid var(--ink-color);
+            border-radius: 12px;
+        }
+        .login-container::before { top: -20px; }
+        .login-container::after { bottom: -20px; }
+
+        .login-header {
+            font-family: 'Cinzel Decorative', cursive;
+            text-align: center;
+            margin-bottom: 25px;
+            border-bottom: 2px dashed var(--ink-color);
+            padding-bottom: 15px;
+            color: #4b2c15;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-family: 'Homemade Apple', cursive;
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+        }
+
+        .form-group input {
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid var(--ink-color);
+            padding: 8px;
+            font-family: 'Crimson Text', serif;
+            font-size: 1.1rem;
+            outline: none;
+            color: var(--ink-color);
+        }
+
+        .btn-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .embark-btn {
+            width: 100%;
+            background: var(--ink-color);
+            color: var(--paper-base);
+            border: none;
+            padding: 14px;
+            font-family: 'Cinzel Decorative', cursive;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #000;
+            transition: 0.1s;
+        }
+        .embark-btn:hover:not(:disabled) { background: #3d2b1f; }
+        .embark-btn:active:not(:disabled) { transform: translateY(4px); box-shadow: none; }
+        .embark-btn:disabled { opacity: 0.5; cursor: wait; }
+
+        .secondary-btn {
+            background: transparent;
+            border: 1px solid var(--ink-color);
+            color: var(--ink-color);
+            padding: 10px;
+            font-family: 'Cinzel Decorative', cursive;
+            font-size: 0.8rem;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+        }
+
+        /* --- MAP VIEW --- */
+        .map-container {
+            max-width: 600px;
+            width: 100%;
+            height: 90vh;
+            background: #dcc08e url("https://www.transparenttextures.com/patterns/crumpled-paper.png");
+            background-blend-mode: multiply;
+            position: relative;
+            box-shadow: 0 0 100px rgba(0,0,0,0.7), inset 0 0 80px rgba(60, 40, 20, 0.3);
+            clip-path: polygon(2% 0%, 15% 2%, 30% 0%, 45% 3%, 60% 1%, 75% 4%, 90% 0%, 100% 2%, 98% 15%, 100% 30%, 97% 45%, 100% 60%, 98% 75%, 100% 90%, 99% 100%, 85% 98%, 70% 100%, 55% 97%, 40% 100%, 25% 98%, 10% 100%, 0% 97%, 2% 85%, 0% 70%, 3% 55%, 0% 40%, 2% 25%, 0% 10%);
+            display: flex;
+            flex-direction: column-reverse;
+            align-items: center;
+            justify-content: space-around;
+            padding: 60px 20px;
+        }
+
+        .path-svg {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+        .path-svg path {
+            fill: none;
+            stroke: var(--ink-color);
+            stroke-width: 4;
+            stroke-dasharray: 12, 10;
+            stroke-linecap: round;
+            opacity: 0.4;
+            filter: url(#inkBleed);
+        }
+
+        .tower-node {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .tower-node.locked { opacity: 0.3; filter: grayscale(1); cursor: not-allowed; }
+
+        .tower-icon { font-size: 4rem; filter: url(#inkBleed) brightness(0.2); }
+        .tower-label { font-family: 'Homemade Apple', cursive; font-weight: bold; font-size: 0.9rem; }
+
+        .quest-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
+            z-index: 200;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .scroll {
+            background: #fdf5e6 url("https://www.transparenttextures.com/patterns/natural-paper.png");
+            width: 100%;
+            max-width: 450px;
+            padding: 50px 40px;
+            border: 2px solid var(--ink-color);
+            box-shadow: 0 20px 50px rgba(0,0,0,1);
+            position: relative;
+            transform: rotate(-1deg);
+        }
+
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
+        .option-btn { background: transparent; border: 2px solid var(--ink-color); padding: 12px; font-family: 'Cinzel Decorative', cursive; cursor: pointer; color: var(--ink-color); transition: 0.2s; }
+        .option-btn:hover { background: rgba(0,0,0,0.05); }
+        
+        .hidden { display: none !important; }
+        #inkBleedFilter { position: absolute; width: 0; height: 0; }
+    </style>
+</head>
+<body>
+
+    <svg id="inkBleedFilter">
+        <filter id="inkBleed">
+            <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="3" result="noise" />
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" />
+        </filter>
+    </svg>
+
+    <div id="loginView" class="login-container">
+        <div class="login-header">
+            <h2 id="ledgerTitle">PIRATE'S LEDGER</h2>
+            <p id="ledgerSub" style="font-size: 0.8rem; letter-spacing: 1px;">IDENTIFY THYSELF TO EMBARK</p>
+        </div>
+        <div class="form-group">
+            <label>Pirate Name</label>
+            <input type="text" id="pirateName" placeholder="e.g. Captain Bluebeard">
+        </div>
+        <div class="form-group">
+            <label>Crew Secret Code</label>
+            <input type="password" id="secretCode" placeholder="••••••••">
+        </div>
+        <div class="form-group hidden" id="registerField">
+            <label>Confirm Secret Code</label>
+            <input type="password" id="confirmCode" placeholder="••••••••">
+        </div>
+        <div class="btn-stack">
+            <button class="embark-btn" id="mainActionBtn" onclick="embark()">EMBARK ON QUEST</button>
+            <button class="secondary-btn" id="toggleModeBtn" onclick="toggleRegisterMode()">NEW PIRATE? ENLIST HERE</button>
+        </div>
+        <p id="loginError" style="color: var(--accent-red); font-size: 0.75rem; text-align: center; margin-top: 15px; display: none; font-weight: bold;"></p>
+    </div>
+
+    <div id="mapView" class="map-container hidden">
+        <button onclick="logout()" style="position:absolute; top:40px; left:40px; background:none; border:1px dashed var(--ink-color); padding:5px; cursor:pointer; font-family:'Cinzel Decorative'; font-size:0.7rem;">ABANDON SHIP</button>
+        <svg class="path-svg" viewBox="0 0 600 850">
+            <path d="M 300 750 C 150 650, 450 600, 450 425 S 150 300, 300 150" />
+        </svg>
+        <div class="tower-node" id="node1" onclick="startQuest(1)"><div class="tower-icon">⛵</div><span class="tower-label">Port (Lvl 1)</span></div>
+        <div class="tower-node locked" id="node2" onclick="startQuest(2)"><div class="tower-icon">💀</div><span class="tower-label">Skull (Lvl 2)</span></div>
+        <div class="tower-node locked" id="node3" onclick="startQuest(3)"><div class="tower-icon">🏰</div><span class="tower-label">Castle (Lvl 3)</span></div>
+    </div>
+
+    <div id="questOverlay" class="quest-overlay">
+        <div class="scroll">
+            <button onclick="closeQuest()" style="float:right; cursor:pointer; background:none; border:none; color:#7a0b0b; font-weight:bold;">CLOSE</button>
+            <h2 id="questTitle" style="font-family:'Cinzel Decorative';">QUEST</h2>
+            <div id="questContent">
+                <h3 id="questionText" style="font-family:'Crimson Text'; font-size: 1.4rem; text-align: center; margin: 30px 0;">...</h3>
+                <div class="options-grid" id="optionsGrid"></div>
+                <div style="display: flex; justify-content: space-between; margin-top: 35px; font-family: 'Cinzel Decorative'; border-top: 2px dashed var(--ink-color); padding-top: 15px;">
+                    <span>Gold: <span id="totalGold">0</span></span>
+                    <span>Task: <span id="qCount">0</span>/10</span>
+                </div>
+            </div>
+            <div id="finalResult" class="hidden" style="text-align: center; padding-top: 20px;">
+                <h2 style="font-family:'Cinzel Decorative'; color: var(--accent-red);">QUEST COMPLETE!</h2>
+                <p id="resultMsg" style="font-family:'Crimson Text'; font-size: 1.2rem; margin: 20px 0;"></p>
+                <div style="color: #7a0b0b; font-weight: bold; font-family: 'Cinzel Decorative'; margin-top: 20px; font-size: 1.1rem; letter-spacing: 2px;">RESULT WILL BE ANNOUNCED SOON</div>
+                <button class="embark-btn" style="margin-top: 30px;" onclick="closeQuest()">RETURN TO MAP</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+        // --- GOOGLE SHEETS CONFIG ---
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxl1fS4VX-HA4Ik7pDmnEQAaIqsdKLw_HHu0BPGkmLBfxdYCjnvZ7WA_Mjx0QchJjio/exec";
+
+        let score = 0;
+        let pirateName = "";
+        let isRegisterMode = false;
+        let userAuthenticated = false;
+        let currentLevel = 1;
+        let highestLevelUnlocked = 1;
+        let currentQIdx = 0;
+
+        async function sendToGoogleSheet(data) {
+            if (!GOOGLE_SCRIPT_URL) return;
+            try {
+                await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    cache: 'no-cache',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+            } catch (e) { console.error("Sheet submission error", e); }
+        }
+
+        const initAuth = async () => {
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                await signInWithCustomToken(auth, __initial_auth_token);
+            } else { await signInAnonymously(auth); }
+        };
+        onAuthStateChanged(auth, u => { userAuthenticated = !!u; });
+        initAuth();
+
+        const questionBank = {
+            1: [{ q: "Which part of a ship is the 'stern'?", o: ["Front", "Back", "Left", "Right"], c: 1 }, { q: "Primary material for 'Ships of the Line'?", o: ["Iron", "Oak Wood", "Steel", "Pine"], c: 1 }, { q: "Measure latitude with?", o: ["Compass", "Sextant", "Anchor", "Telescope"], c: 1 }, { q: "A 'knot' measures?", o: ["Rope", "Speed", "Depth", "Weight"], c: 1 }, { q: "Legendary ghost ship?", o: ["Pearl", "Dutchman", "Beagle", "Victoria"], c: 1 }, { q: "Side of 'Starboard'?", o: ["Front", "Back", "Left", "Right"], c: 3 }, { q: "Floor of a ship?", o: ["Ground", "Deck", "Sole", "Board"], c: 1 }, { q: "Leaving port flag?", o: ["Blue Peter", "Union Jack", "Jolly Roger", "Red"], c: 0 }, { q: "Lookout spot?", o: ["Storage", "Sleeping", "Crow's nest", "Cooking"], c: 2 }, { q: "Mythical sea monster?", o: ["Griffin", "Kraken", "Manticore", "Hydra"], c: 1 }],
+            2: [{ q: "Blackbeard's ship?", o: ["Queen Anne", "Jolly Roger", "Avenger", "Hind"], c: 0 }, { q: "Famed 'walker of plank'?", o: ["Morgan", "Bonnet", "Peter", "Jack"], c: 1 }, { q: "Jolly Roger depicts?", o: ["Sword", "Skull/Bones", "Parrot", "Chest"], c: 1 }, { q: "Pirate sea?", o: ["Med", "Caribbean", "Baltic", "China"], c: 1 }, { q: "Female pirate?", o: ["Anne Bonny", "Liz I", "Mary", "Cleo"], c: 0 }, { q: "Pirate Code name?", o: ["Articles", "Bible", "Law", "Rules"], c: 0 }, { q: "A 'Privateer'?", o: ["Thief", "State Pirate", "Builder", "Officer"], c: 1 }, { q: "Pirate capital?", o: ["Kingston", "Port Royal", "Bay", "Nassau"], c: 1 }, { q: "Pieces of Eight?", o: ["Food", "Silver Coins", "Rope", "Parts"], c: 1 }, { q: "The Successful Pirate?", o: ["Blackbeard", "Roberts", "Avery", "Kidd"], c: 2 }],
+            3: [{ q: "Castle wall name?", o: ["Keep", "Curtain Wall", "Moat", "Gate"], c: 1 }, { q: "Strongest tower?", o: ["Keep", "Bailey", "Gate", "Barbican"], c: 0 }, { q: "Archer shooting gaps?", o: ["Windows", "Arrow Slits", "Machic", "Portcullis"], c: 1 }, { q: "A 'moat' is?", o: ["Tower", "Ditch", "Gate", "Weapon"], c: 1 }, { q: "Heavy sliding gate?", o: ["Barbican", "Keep", "Portcullis", "Bailey"], c: 2 }, { q: "Castle courtyard?", o: ["Keep", "Bailey", "Moat", "Turret"], c: 1 }, { q: "Stone throwing engine?", o: ["Ram", "Ballista", "Trebuchet", "Tower"], c: 2 }, { q: "Wall top gaps?", o: ["Embras", "Turrets", "Battlements", "Gables"], c: 2 }, { q: "Barbican purpose?", o: ["Feast", "Store", "Defend gateway", "Living"], c: 2 }, { q: "Welsh architect?", o: ["James St Geo", "Wren", "Vinci", "Brunell"], c: 0 }]
+        };
+
+        window.toggleRegisterMode = function() {
+            isRegisterMode = !isRegisterMode;
+            document.getElementById('ledgerTitle').innerText = isRegisterMode ? "ENLISTMENT" : "LEDGER";
+            document.getElementById('registerField').classList.toggle('hidden');
+            document.getElementById('mainActionBtn').innerText = isRegisterMode ? "JOIN CREW" : "EMBARK";
+        };
+
+        window.embark = async function() {
+            const nameInput = document.getElementById('pirateName').value;
+            const codeInput = document.getElementById('secretCode').value;
+            const confirmInput = document.getElementById('confirmCode').value;
+            const error = document.getElementById('loginError');
+            
+            if (!nameInput || codeInput.length < 4) {
+                error.innerText = "Check thy name and code!";
+                error.style.display = "block";
+                return;
+            }
+
+            try {
+                const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'registrations');
+                const snap = await getDocs(colRef);
+                const pirates = snap.docs.map(d => d.data());
+
+                if (isRegisterMode) {
+                    if (codeInput !== confirmInput) { error.innerText = "Codes don't match!"; error.style.display="block"; return; }
+                    if (pirates.some(p => p.name.toLowerCase() === nameInput.toLowerCase())) { error.innerText = "Already on ledger!"; error.style.display="block"; return; }
+                    
+                    await addDoc(colRef, { name: nameInput, code: codeInput });
+                    await sendToGoogleSheet({ type: "registration", name: nameInput, code: codeInput });
+                    alert("Welcome to the crew!");
+                } else {
+                    if (!pirates.some(p => p.name.toLowerCase() === nameInput.toLowerCase() && p.code === codeInput)) {
+                        error.innerText = "Identity unrecognized!"; error.style.display="block"; return;
+                    }
+                }
+                pirateName = nameInput;
+                document.getElementById('loginView').classList.add('hidden');
+                document.getElementById('mapView').classList.remove('hidden');
+                updateMapNodes();
+            } catch (err) { error.innerText = "The Ledger is jammed!"; error.style.display="block"; }
+        };
+
+        window.startQuest = function(level) {
+            if (level > highestLevelUnlocked) return;
+            currentLevel = level; currentQIdx = 0;
+            document.getElementById('questContent').classList.remove('hidden');
+            document.getElementById('finalResult').classList.add('hidden');
+            document.getElementById('questOverlay').style.display = 'flex';
+            renderQuestion();
+        };
+
+        function renderQuestion() {
+            const q = questionBank[currentLevel][currentQIdx];
+            document.getElementById('questionText').innerText = q.q;
+            document.getElementById('qCount').innerText = currentQIdx + 1;
+            document.getElementById('totalGold').innerText = score;
+            const grid = document.getElementById('optionsGrid');
+            grid.innerHTML = '';
+            q.o.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "option-btn"; btn.innerText = opt;
+                btn.onclick = () => {
+                    const corr = questionBank[currentLevel][currentQIdx].c;
+                    if (idx === corr) { score += 10; alert("CORRECT! +10 Gold."); } 
+                    else { score -= 10; alert("WRONG! -10 Gold."); }
+                    currentQIdx++;
+                    if (currentQIdx < 10) renderQuestion(); else showLevelComplete();
+                };
+                grid.appendChild(btn);
+            });
+        }
+
+        async function showLevelComplete() {
+            document.getElementById('questContent').classList.add('hidden');
+            document.getElementById('finalResult').classList.remove('hidden');
+            const msg = document.getElementById('resultMsg');
+            if (currentLevel === 3) {
+                msg.innerHTML = `THOU HAST COMPLETED THE ULTIMATE QUEST!<br>Total Gold Accrued: <strong>${score}</strong>`;
+                await sendToGoogleSheet({ type: "completion", name: pirateName, score: score });
+            } else {
+                msg.innerHTML = `Level ${currentLevel} Trials Completed.<br>Thy Gold: <strong>${score}</strong><br>The next path is now open!`;
+                if (highestLevelUnlocked === currentLevel) highestLevelUnlocked++;
+            }
+            updateMapNodes();
+        }
+
+        window.closeQuest = () => document.getElementById('questOverlay').style.display = 'none';
+        window.logout = () => location.reload();
+        function updateMapNodes() {
+            for (let i = 1; i <= 3; i++) {
+                const n = document.getElementById(`node${i}`);
+                if (n) n.classList.toggle('locked', i > highestLevelUnlocked);
+            }
+        }
+    </script>
+</body>
+</html>
