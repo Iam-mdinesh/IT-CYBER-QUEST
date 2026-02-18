@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MIS Quest - The Data Detective</title>
+    <style>
+        /* --- Authentic Funky Map Styles --- */
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Homemade+Apple&family=Crimson+Text:ital,wght@0,600;1,400&display=swap');
+
+        :root {
+            --ink-color: #2b1d12;
+            --paper-base: #dcc08e;
+            --accent-red: #7a0b0b;
+            --gold: #b8860b;
+            --transition-speed: 0.6s;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: #110c08;
+            background-image: 
+                radial-gradient(circle at center, rgba(0,0,0,0) 0%, rgba(0,0,0,0.9) 100%),
+                url("https://www.transparenttextures.com/patterns/dark-wood.png");
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: var(--ink-color);
+            overflow: hidden;
+            perspective: 1200px;
+            position: relative;
+        }
+
+        /* --- View Management (Centered) --- */
+        .view {
+            transition: opacity var(--transition-speed) ease, transform var(--transition-speed) ease;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(0deg);
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .view.hidden {
+            opacity: 0 !important;
+            transform: translate(-50%, -40%) scale(0.9);
+            pointer-events: none;
+        }
+
+        /* --- LOGIN & REGISTER VIEW --- */
+        .login-container {
+            width: 100%;
+            max-width: 400px;
+            background: #fdf5e6 url("https://www.transparenttextures.com/patterns/natural-paper.png");
+            padding: 50px 40px;
+            border: 2px solid var(--ink-color);
+            box-shadow: 0 20px 50px rgba(0,0,0,1);
+            position: relative;
+            transform: rotate(1deg);
+            z-index: 100;
+        }
+
+        .login-container::before, .login-container::after {
+            content: "";
+            position: absolute;
+            left: -15px; right: -15px;
+            height: 30px;
+            background: linear-gradient(to right, #4b2c15, var(--gold), #4b2c15);
+            border: 2px solid var(--ink-color);
+            border-radius: 12px;
+        }
+        .login-container::before { top: -20px; }
+        .login-container::after { bottom: -20px; }
+
+        .login-header {
+            font-family: 'Cinzel Decorative', cursive;
+            text-align: center;
+            margin-bottom: 25px;
+            border-bottom: 2px dashed var(--ink-color);
+            padding-bottom: 15px;
+            color: #4b2c15;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+            display: flex;
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .form-group label {
+            font-family: 'Homemade Apple', cursive;
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+        }
+
+        .form-group input {
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid var(--ink-color);
+            padding: 8px;
+            font-family: 'Crimson Text', serif;
+            font-size: 1.1rem;
+            outline: none;
+            color: var(--ink-color);
+            text-align: center;
+        }
+
+        .btn-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 20px;
+            align-items: center;
+        }
+
+        .embark-btn {
+            width: 100%;
+            background: var(--ink-color);
+            color: var(--paper-base);
+            border: none;
+            padding: 14px;
+            font-family: 'Cinzel Decorative', cursive;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #000;
+            transition: 0.2s;
+        }
+        .embark-btn:hover:not(:disabled) { background: #3d2b1f; }
+        .embark-btn:active:not(:disabled) { transform: translateY(4px); box-shadow: none; }
+        .embark-btn:disabled { opacity: 0.7; cursor: wait; transform: scale(0.98); }
+
+        .secondary-btn {
+            background: transparent;
+            border: 1px solid var(--ink-color);
+            color: var(--ink-color);
+            padding: 10px;
+            font-family: 'Cinzel Decorative', cursive;
+            font-size: 0.8rem;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+            width: 100%;
+        }
+
+        /* --- MAP VIEW --- */
+        .map-container {
+            max-width: 600px;
+            width: 95vw;
+            height: 90vh;
+            background: #dcc08e url("https://www.transparenttextures.com/patterns/crumpled-paper.png");
+            background-blend-mode: multiply;
+            position: relative;
+            box-shadow: 0 0 100px rgba(0,0,0,0.7), inset 0 0 80px rgba(60, 40, 20, 0.3);
+            clip-path: polygon(2% 0%, 15% 2%, 30% 0%, 45% 3%, 60% 1%, 75% 4%, 90% 0%, 100% 2%, 98% 15%, 100% 30%, 97% 45%, 100% 60%, 98% 75%, 100% 90%, 99% 100%, 85% 98%, 70% 100%, 55% 97%, 40% 100%, 25% 98%, 10% 100%, 0% 97%, 2% 85%, 0% 70%, 3% 55%, 0% 40%, 2% 25%, 0% 10%);
+            display: flex;
+            flex-direction: column-reverse;
+            align-items: center;
+            justify-content: space-around;
+            padding: 60px 20px;
+        }
+
+        .path-svg {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+        .path-svg path {
+            fill: none;
+            stroke: var(--ink-color);
+            stroke-width: 4;
+            stroke-dasharray: 12, 10;
+            stroke-linecap: round;
+            opacity: 0.4;
+            filter: url(#inkBleed);
+        }
+
+        .tower-node {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .tower-node:hover:not(.locked) { transform: scale(1.1); }
+        .tower-node.locked { opacity: 0.3; filter: grayscale(1); cursor: not-allowed; }
+
+        .tower-icon { font-size: 4rem; filter: url(#inkBleed) brightness(0.2); }
+        .tower-label { font-family: 'Homemade Apple', cursive; font-weight: bold; font-size: 0.9rem; }
+
+        /* --- OVERLAYS --- */
+        .quest-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(8px);
+            z-index: 200;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .scroll {
+            background: #fdf5e6 url("https://www.transparenttextures.com/patterns/natural-paper.png");
+            width: 100%;
+            max-width: 550px;
+            padding: 50px 40px;
+            border: 2px solid var(--ink-color);
+            box-shadow: 0 20px 50px rgba(0,0,0,1);
+            position: relative;
+            transform: rotate(-1deg) scale(0.9);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-align: center;
+        }
+
+        .quest-overlay.active { display: flex; opacity: 1; }
+        .quest-overlay.active .scroll { transform: rotate(-1deg) scale(1); }
+
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
+        .option-btn { 
+            background: transparent; 
+            border: 2px solid var(--ink-color); 
+            padding: 12px; 
+            font-family: 'Crimson Text', serif; 
+            font-size: 1rem;
+            cursor: pointer; 
+            color: var(--ink-color); 
+            transition: 0.2s; 
+            text-align: center;
+        }
+        .option-btn:hover { background: rgba(0,0,0,0.05); transform: scale(1.02); }
+        
+        .hidden-absolute { display: none !important; }
+        #inkBleedFilter { position: absolute; width: 0; height: 0; }
+    </style>
+</head>
+<body>
+
+    <svg id="inkBleedFilter">
+        <filter id="inkBleed">
+            <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="3" result="noise" />
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" />
+        </filter>
+    </svg>
+
+    <div id="loginView" class="view">
+        <div class="login-container">
+            <div class="login-header">
+                <h2 id="ledgerTitle">DATA DETECTIVE</h2>
+                <p id="ledgerSub" style="font-size: 0.8rem; letter-spacing: 1px;">IDENTIFY THYSELF TO BEGIN</p>
+            </div>
+            <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" id="pirateNameInput" placeholder="e.g. Alex Johnson">
+            </div>
+            <div class="form-group">
+                <label>Secret Code</label>
+                <input type="password" id="secretCodeInput" placeholder="••••••••">
+            </div>
+            <div class="form-group hidden-absolute" id="registerField">
+                <label>Confirm Secret Code</label>
+                <input type="password" id="confirmCodeInput" placeholder="••••••••">
+            </div>
+            <div class="btn-stack">
+                <button class="embark-btn" id="mainActionBtn" onclick="embark()">START MISSION</button>
+                <button class="secondary-btn" id="toggleModeBtn" onclick="toggleRegisterMode()">NEW USER? REGISTER HERE</button>
+            </div>
+            <p id="loginError" style="color: var(--accent-red); font-size: 0.75rem; text-align: center; margin-top: 15px; opacity: 0; transition: opacity 0.3s; font-weight: bold;"></p>
+        </div>
+    </div>
+
+    <div id="mapView" class="view hidden">
+        <div class="map-container">
+            <button onclick="logout()" style="position:absolute; top:40px; left:40px; background:none; border:1px dashed var(--ink-color); padding:5px; cursor:pointer; font-family:'Cinzel Decorative'; font-size:0.7rem; z-index: 20;">ABANDON MISSION</button>
+            <svg class="path-svg" viewBox="0 0 600 850">
+                <path d="M 300 750 C 150 650, 450 600, 450 425 S 150 300, 300 150" />
+            </svg>
+            <div class="tower-node" id="node1" onclick="startQuest(1)"><div class="tower-icon">⛵</div><span class="tower-label">Basics (Level 1)</span></div>
+            <div class="tower-node locked" id="node2" onclick="startQuest(2)"><div class="tower-icon">💀</div><span class="tower-label">Applied (Level 2)</span></div>
+            <div class="tower-node locked" id="node3" onclick="startQuest(3)"><div class="tower-icon">🏰</div><span class="tower-label">Mastery (Level 3)</span></div>
+        </div>
+    </div>
+
+    <div id="questOverlay" class="quest-overlay">
+        <div class="scroll">
+            <button onclick="closeQuest()" style="float:right; cursor:pointer; background:none; border:none; color:#7a0b0b; font-weight:bold; font-size: 1.2rem;">&times;</button>
+            <h2 id="questTitle" style="font-family:'Cinzel Decorative';">MISSION TRIAL</h2>
+            <div id="questContent">
+                <h3 id="questionText" style="font-family:'Crimson Text'; font-size: 1.3rem; text-align: center; margin: 30px 0; line-height: 1.4;">...</h3>
+                <div class="options-grid" id="optionsGrid"></div>
+                <div style="display: flex; justify-content: space-between; margin-top: 35px; font-family: 'Cinzel Decorative'; border-top: 2px dashed var(--ink-color); padding-top: 15px;">
+                    <span>Gold: <span id="totalGold">0</span></span>
+                    <span>Task: <span id="qCount">0</span>/10</span>
+                </div>
+            </div>
+            <div id="finalResult" class="hidden-absolute" style="text-align: center; padding-top: 20px;">
+                <h2 style="font-family:'Cinzel Decorative'; color: var(--accent-red);">LEVEL COMPLETE!</h2>
+                <p id="resultMsg" style="font-family:'Crimson Text'; font-size: 1.2rem; margin: 20px 0;"></p>
+                <div style="color: #7a0b0b; font-weight: bold; font-family: 'Cinzel Decorative'; margin-top: 20px; font-size: 1.1rem; letter-spacing: 2px;">YOUR RANKING HAS BEEN SAVED</div>
+                <button class="embark-btn" style="margin-top: 30px;" onclick="closeQuest()">RETURN TO MAP</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- ENVIRONMENT HANDLING ---
+        const firebaseConfigRaw = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'mis-treasure-hunt';
+        const initialToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // UPDATED GOOGLE SCRIPT URL
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbygUc3n5TQuK7Bt_ZVZx3W-UnqlKMXoqC6Jl5CIRUC0vKbYrkeF1BRewrWCl6kKTNng/exec";
+
+        let app, auth, db;
+        let userAuthenticated = false;
+
+        if (firebaseConfigRaw) {
+            const firebaseConfig = JSON.parse(firebaseConfigRaw);
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+
+            const initAuth = async () => {
+                try {
+                    if (initialToken) await signInWithCustomToken(auth, initialToken);
+                    else await signInAnonymously(auth);
+                } catch(e) { console.error("Auth init failed", e); }
+            };
+            onAuthStateChanged(auth, u => { userAuthenticated = !!u; });
+            initAuth();
+        }
+
+        let score = 0;
+        let pirateName = "";
+        let pirateCode = "";
+        let isRegisterMode = false;
+        let currentLevel = 1;
+        let highestLevelUnlocked = 1;
+        let currentQIdx = 0;
+
+        async function sendToGoogleSheet(data) {
+            if (!GOOGLE_SCRIPT_URL) return;
+            const payload = { ...data, timestamp: new Date().toLocaleString(), appId: appId };
+            try {
+                await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    cache: 'no-cache',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+            } catch (e) { console.error("Sheet submission error:", e); }
+        }
+
+        const questionBank = {
+            1: [
+                { q: "What does MIS stand for?", o: ["(A) Marketing Intelligence System", "(B) Management Information System", "(C) Manual Input Software", "(D) Master Integration Service"], c: 1 },
+                { q: "Which of the following is the CORRECT relationship between Data and Information?", o: ["(A) Info is raw facts; Data is processed", "(B) Data and Info are exactly the same", "(C) Data is raw facts; Info is processed/meaningful", "(D) Info comes before Data"], c: 2 },
+                { q: "Which of the following is an example of DATA?", o: ["(A) 'Sales increased by 20%'", "(B) 'Best-performing region is North'", "(C) 200 customer phone numbers in a database", "(D) Manager's report recommending price cuts"], c: 2 },
+                { q: "Which of the following is an example of INFORMATION?", o: ["(A) Employee ID numbers", "(B) Raw biometric attendance records", "(C) 'Absenteeism dropped 15% after new policy'", "(D) Product barcodes scanned at warehouse"], c: 2 },
+                { q: "What is the PRIMARY purpose of a Management Information System?", o: ["(A) To replace human managers", "(B) To provide relevant/timely info for decisions", "(C) To store raw data without any processing", "(D) To handle only financial transactions"], c: 1 },
+                { q: "Which of the following is NOT a characteristic of good quality information?", o: ["(A) Accurate", "(B) Timely", "(C) Vague/Open to interpretations", "(D) Relevant"], c: 2 },
+                { q: "In an Excel spreadsheet, what is a ROW?", o: ["(A) Vertical arrangement", "(B) Horizontal arrangement", "(C) Intersection of column and page", "(D) A named range of formulas"], c: 1 },
+                { q: "In an Excel spreadsheet, what is a COLUMN?", o: ["(A) Horizontal line identified by number", "(B) Vertical line identified by a letter", "(C) A cell containing a formula", "(D) A sheet tab at the bottom"], c: 1 },
+                { q: "When you SORT data in Excel from A to Z on 'Last Name', what happens?", o: ["(A) All data is deleted except names", "(B) Names arranged in reverse alphabet", "(C) Names arranged in alphabetical order", "(D) Only the name column moves"], c: 2 },
+                { q: "What is the purpose of the FILTER feature in Excel?", o: ["(A) To permanently delete rows", "(B) To change cell colours automatically", "(C) To temporarily show rows matching a condition", "(D) To merge multiple spreadsheets"], c: 2 }
+            ],
+            2: [
+                { q: "A manager wants to view only 'HR' employees in a list of 500. Which feature to use?", o: ["(A) Sort Z to A", "(B) Freeze Panes", "(C) Filter", "(D) Find & Replace"], c: 2 },
+                { q: "What does a DATABASE primarily do?", o: ["(A) Sends emails automatically", "(B) Stores and organizes large structured data", "(C) Designs company logos", "(D) Processes payroll calculations only"], c: 1 },
+                { q: "Which correctly describes a TRANSACTION PROCESSING SYSTEM (TPS)?", o: ["(A) Helps top management plan 5-year strategies", "(B) Processes day-to-day routine business transactions", "(C) Only generates annual company reports", "(D) Used exclusively by the IT department"], c: 1 },
+                { q: "Which is a real-world example of a Transaction Processing System (TPS)?", o: ["(A) Strategic planning dashboard", "(B) An ATM machine", "(C) Demand prediction tool", "(D) Report comparing profit vs last year"], c: 1 },
+                { q: "What does the term 'USER INTERFACE' mean?", o: ["(A) Internal programming code", "(B) Physical hardware like mouse", "(C) Interaction point (screens, buttons, menus)", "(D) Network cables"], c: 2 },
+                { q: "A company collects complaints daily but never analyses them. This situation is:", o: ["(A) Good info, poor data", "(B) Data not converted into info", "(C) Too much info, needs less data", "(D) Data and info are identical here"], c: 1 },
+                { q: "Which represents the CORRECT sequence in the information processing cycle?", o: ["(A) Info -> Processing -> Data -> Output", "(B) Data -> Processing -> Info -> Decision", "(C) Decision -> Data -> Processing -> Info", "(D) Output -> Input -> Processing -> Storage"], c: 1 },
+                { q: "What does ERP (Enterprise Resource Planning) primarily do for a business?", o: ["(A) Manages social media", "(B) Integrates all key business processes", "(C) Replaces human employees", "(D) Handles only sales/marketing"], c: 1 },
+                { q: "Which level of information system best tracks daily sales of each product?", o: ["(A) Decision Support System (DSS)", "(B) Executive Information System (EIS)", "(C) Transaction Processing System (TPS)", "(D) Artificial Intelligence (AI)"], c: 2 },
+                { q: "Which separates a DECISION SUPPORT SYSTEM (DSS) from a basic MIS?", o: ["(A) DSS only processes payroll", "(B) DSS helps analyze 'what-if' scenarios", "(C) DSS used only by junior staff", "(D) DSS requires no data input"], c: 1 }
+            ],
+            3: [
+                { q: "In data quality context, which of the following is the BEST record?", o: ["(A) Name: 'RAJESH sharma', Salary: 'five lakhs'", "(B) Name: 'Rajesh Sharma', Salary: 500000", "(C) Name: 'rajesh', Salary: '5,00,000 rupees'", "(D) Name: 'R. Sharma', Salary: 0"], c: 1 },
+                { q: "A manager has 10,000 rows of raw data but cannot make a decision. CORE problem?", o: ["(A) Not enough data", "(B) Data not processed into actionable info", "(C) Needs bigger screen", "(D) Figures are incorrect"], c: 1 },
+                { q: "Which BEST describes CLOUD COMPUTING in the context of MIS?", o: ["(A) Storing data in physical filing cabinets", "(B) Accessing resources over internet (pay-per-use)", "(C) Installing software on every laptop separately", "(D) Using only pen and paper"], c: 1 },
+                { q: "What is CYBERSECURITY in the context of information systems?", o: ["(A) Designing attractive UI", "(B) Converting data into info", "(C) Protecting systems/data from digital attacks", "(D) Compressing large files"], c: 2 },
+                { q: "Hospital patient records, bank accounts, and student marks use what in common?", o: ["(A) Same software brand", "(B) Transaction Processing only", "(C) DBMS to manage structured data", "(D) Constant internet connectivity"], c: 2 },
+                { q: "What does the acronym 'GIGO' mean in MIS?", o: ["(A) Global Input, Global Output", "(B) Garbage In, Garbage Out", "(C) Great Info, Good Output", "(D) Generate Input, Get Output"], c: 1 },
+                { q: "Which system is primarily used by CEOs for long-term strategic decisions?", o: ["(A) TPS", "(B) Executive Information System (EIS)", "(C) Spreadsheet", "(D) Word Processor"], c: 1 },
+                { q: "What is the main goal of a Knowledge Management System (KMS)?", o: ["(A) Calculating tax", "(B) Capturing and sharing employee expertise", "(C) Processing barcodes", "(D) Deleting old emails"], c: 1 },
+                { q: "Which MIS component focuses on the flow of goods from source to customer?", o: ["(A) CRM", "(B) Supply Chain Management (SCM)", "(C) HRIS", "(D) CAD"], c: 1 },
+                { q: "What is a 'Primary Key' in a database?", o: ["(A) A password to enter the room", "(B) A unique identifier for a record", "(C) The most expensive software license", "(D) The main computer in the network"], c: 1 }
+            ]
+        };
+
+        window.toggleRegisterMode = function() {
+            isRegisterMode = !isRegisterMode;
+            document.getElementById('ledgerTitle').innerText = isRegisterMode ? "ENROLLMENT" : "DATA DETECTIVE";
+            document.getElementById('registerField').classList.toggle('hidden-absolute');
+            document.getElementById('mainActionBtn').innerText = isRegisterMode ? "REGISTER" : "START MISSION";
+        };
+
+        window.embark = async function() {
+            const nameInput = document.getElementById('pirateNameInput').value;
+            const codeInput = document.getElementById('secretCodeInput').value;
+            const confirmInput = document.getElementById('confirmCodeInput').value;
+            const error = document.getElementById('loginError');
+            const btn = document.getElementById('mainActionBtn');
+            
+            if (!nameInput || codeInput.length < 4) {
+                error.innerText = "Name required and code must be 4+ chars!";
+                error.style.opacity = "1";
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = "VERIFYING...";
+
+            if (db) {
+                try {
+                    const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'registrations');
+                    const snap = await getDocs(colRef);
+                    const pirates = snap.docs.map(d => d.data());
+
+                    if (isRegisterMode) {
+                        if (codeInput !== confirmInput) { throw new Error("Codes don't match!"); }
+                        if (pirates.some(p => p.name.toLowerCase() === nameInput.toLowerCase())) { throw new Error("Name already registered!"); }
+                        await addDoc(colRef, { name: nameInput, code: codeInput });
+                        await sendToGoogleSheet({ type: "registration", name: nameInput, code: codeInput });
+                    } else {
+                        if (!pirates.some(p => p.name.toLowerCase() === nameInput.toLowerCase() && p.code === codeInput)) {
+                            throw new Error("Invalid credentials!");
+                        }
+                    }
+                } catch (err) { 
+                    error.innerText = err.message || "Ledger Error!"; 
+                    error.style.opacity = "1";
+                    btn.disabled = false;
+                    btn.innerText = isRegisterMode ? "REGISTER" : "START MISSION";
+                    return;
+                }
+            }
+
+            // Smooth transition to Map
+            pirateName = nameInput;
+            pirateCode = codeInput;
+            
+            document.getElementById('loginView').classList.add('hidden');
+            setTimeout(() => {
+                document.getElementById('mapView').classList.remove('hidden');
+                updateMapNodes();
+                btn.disabled = false;
+                btn.innerText = isRegisterMode ? "REGISTER" : "START MISSION";
+            }, 600);
+        };
+
+        window.startQuest = function(level) {
+            if (level > highestLevelUnlocked) return;
+            currentLevel = level; currentQIdx = 0;
+            document.getElementById('questContent').classList.remove('hidden-absolute');
+            document.getElementById('finalResult').classList.add('hidden-absolute');
+            const overlay = document.getElementById('questOverlay');
+            overlay.style.display = 'flex';
+            setTimeout(() => overlay.classList.add('active'), 10);
+            renderQuestion();
+        };
+
+        function renderQuestion() {
+            const q = questionBank[currentLevel][currentQIdx];
+            document.getElementById('questionText').innerText = q.q;
+            document.getElementById('qCount').innerText = currentQIdx + 1;
+            document.getElementById('totalGold').innerText = score;
+            const grid = document.getElementById('optionsGrid');
+            grid.innerHTML = '';
+            q.o.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "option-btn"; btn.innerText = opt;
+                btn.onclick = () => {
+                    const corr = questionBank[currentLevel][currentQIdx].c;
+                    if (idx === corr) score += 10;
+                    else score -= 10;
+                    currentQIdx++;
+                    if (currentQIdx < 10) renderQuestion(); else showLevelComplete();
+                };
+                grid.appendChild(btn);
+            });
+        }
+
+        async function showLevelComplete() {
+            document.getElementById('questContent').classList.add('hidden-absolute');
+            document.getElementById('finalResult').classList.remove('hidden-absolute');
+            const msg = document.getElementById('resultMsg');
+            
+            await sendToGoogleSheet({ 
+                type: "completion", 
+                name: pirateName, 
+                code: pirateCode, 
+                score: score, 
+                levelReached: currentLevel
+            });
+
+            if (currentLevel === 3) {
+                msg.innerHTML = `MISSION ACCOMPLISHED!<br>Total Score: <strong>${score}</strong>`;
+            } else {
+                msg.innerHTML = `Stage ${currentLevel} Trials Completed.<br>Score: <strong>${score}</strong><br>The next sector is unlocked!`;
+                if (highestLevelUnlocked === currentLevel) highestLevelUnlocked++;
+            }
+            updateMapNodes();
+        }
+
+        window.closeQuest = () => {
+            const overlay = document.getElementById('questOverlay');
+            overlay.classList.remove('active');
+            setTimeout(() => overlay.style.display = 'none', 400);
+        };
+
+        window.logout = () => {
+            // Smooth logout transition
+            document.getElementById('mapView').classList.add('hidden');
+            setTimeout(() => {
+                // Reset states
+                score = 0;
+                highestLevelUnlocked = 1;
+                document.getElementById('pirateNameInput').value = "";
+                document.getElementById('secretCodeInput').value = "";
+                document.getElementById('loginView').classList.remove('hidden');
+            }, 600);
+        };
+
+        function updateMapNodes() {
+            for (let i = 1; i <= 3; i++) {
+                const n = document.getElementById(`node${i}`);
+                if (n) n.classList.toggle('locked', i > highestLevelUnlocked);
+            }
+        }
+
+        updateMapNodes();
+    </script>
+</body>
+</html>
